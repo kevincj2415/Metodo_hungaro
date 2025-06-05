@@ -50,15 +50,13 @@ El **Método Húngaro** es un algoritmo diseñado para resolver problemas de asi
 ```
 📁 Metodo_hungaro/
 ├── templates/
-│   ├── index.html              # Página de inicio
+│   ├── inicio.html              # Página de inicio
 │   ├── datos_1.html            # Formulario: cantidad de trabajadores y tareas
-│   ├── datos_2.html            # Formulario: matriz de costos
-│   ├── resumen.html            # Muestra matriz de entrada
-│   └── solucion.html           # Muestra matriz de solución y asignaciones
-├── static/
-│   └── style.css               # Estilos generales (opcional)
+│   ├── datos_3.html            # Formulario: matriz de costos
+│   ├── tabla.html            # Muestra matriz de entrada
+│   └── resultado.html           # Muestra matriz de solución y asignaciones           # Estilos generales (opcional)
 ├── app.py (o main.py)         # Servidor Flask principal
-└── algoritmo.py               # Implementación del Método Húngaro
+└── hungaro.py               # Implementación del Método Húngaro
 ```
 
 ---
@@ -106,7 +104,7 @@ El **Método Húngaro** es un algoritmo diseñado para resolver problemas de asi
 
 ## 🤝 Créditos
 
-- Desarrollado por [@kevincj2415](https://github.com/kevincj2415)
+- Desarrollado por [@kevincj2415](https://github.com/kevincj2415) y [JairoAgamer132](https://github.com/JairoAgamer132)
 - Inspirado en el algoritmo de Kuhn (Hungarian Algorithm)
 
 ---
