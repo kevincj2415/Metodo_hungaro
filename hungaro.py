@@ -1,69 +1,82 @@
 def algoritmo_hungaro(matriz_costos):
-    from copy import deepcopy
+    # Copiar matriz original
+    matriz = [fila[:] for fila in matriz_costos]
 
-    trabajadores = len(matriz_costos)
-    tareas = len(matriz_costos[0])
+    filas = len(matriz)
+    columnas = len(matriz[0])
 
-    # Asegurarse de que la matriz sea cuadrada: agregar filas o columnas ficticias si es necesario
-    if trabajadores < tareas:
-        for _ in range(tareas - trabajadores):
-            matriz_costos.append([0] * tareas)
-    elif trabajadores > tareas:
-        for fila in matriz_costos:
-            fila.extend([0] * (trabajadores - tareas))
+    # Hacer matriz cuadrada agregando ceros
+    if filas < columnas:
+        for _ in range(columnas - filas):
+            matriz.append([0] * columnas)
+    elif filas > columnas:
+        for fila in matriz:
+            fila.extend([0] * (filas - columnas))
 
-    n = len(matriz_costos)
-    matriz = deepcopy(matriz_costos)
+    n = len(matriz)
 
-    # Paso 1: Resta mínima por fila
+    # Paso 1: restar el número más chico de cada fila
     for i in range(n):
-        minimo_fila = min(matriz[i])
-        matriz[i] = [valor - minimo_fila for valor in matriz[i]]
+        menor = min(matriz[i])
+        for j in range(n):
+            matriz[i][j] -= menor
 
-    # Paso 2: Resta mínima por columna
+    # Paso 2: restar el menor de cada columna
     for j in range(n):
-        columna = [matriz[i][j] for i in range(n)]
-        minimo_columna = min(columna)
+        col = [matriz[i][j] for i in range(n)]
+        menor = min(col)
         for i in range(n):
-            matriz[i][j] -= minimo_columna
+            matriz[i][j] -= menor
 
-    def encontrar_ceros(m):
-        return [(i, j) for i in range(n) for j in range(n) if m[i][j] == 0]
+    # Encontrar los ceros en la matriz
+    def buscar_ceros(m):
+        lista = []
+        for i in range(n):
+            for j in range(n):
+                if m[i][j] == 0:
+                    lista.append((i, j))
+        return lista
 
-    def cubrir_ceros(m):
-        fila_cubierta = [False] * n
-        columna_cubierta = [False] * n
-        marcado = [[0]*n for _ in range(n)]
-        ceros = encontrar_ceros(m)
-        fila_tiene_estrella = [False] * n
-        columna_tiene_estrella = [False] * n
+    # Cubrir ceros con líneas (básicamente marcar)
+    def marcar_ceros(m):
+        filas_marcadas = [False] * n
+        columnas_marcadas = [False] * n
+        marcas = [[0] * n for _ in range(n)]
+        usados_filas = [False] * n
+        usados_columnas = [False] * n
+
+        ceros = buscar_ceros(m)
 
         for i, j in ceros:
-            if not fila_tiene_estrella[i] and not columna_tiene_estrella[j]:
-                marcado[i][j] = 1
-                fila_tiene_estrella[i] = True
-                columna_tiene_estrella[j] = True
+            if not usados_filas[i] and not usados_columnas[j]:
+                marcas[i][j] = 1  # estrella
+                usados_filas[i] = True
+                usados_columnas[j] = True
 
-        for j in range(n):
-            for i in range(n):
-                if marcado[i][j] == 1:
-                    columna_cubierta[j] = True
+        for i in range(n):
+            for j in range(n):
+                if marcas[i][j] == 1:
+                    columnas_marcadas[j] = True
 
-        return marcado, fila_cubierta, columna_cubierta
+        return marcas, filas_marcadas, columnas_marcadas
 
-    def paso4(matriz, marcado, fila_cubierta, columna_cubierta):
+    # Paso 4: manejar los ceros no cubiertos
+    def paso_cuatro(m, marcas, filas_marcadas, columnas_marcadas):
         while True:
             cero_encontrado = False
             for i in range(n):
                 for j in range(n):
-                    if matriz[i][j] == 0 and not fila_cubierta[i] and not columna_cubierta[j]:
-                        marcado[i][j] = 2
-                        columna_con_estrella = next((k for k in range(n) if marcado[i][k] == 1), -1)
-                        if columna_con_estrella != -1:
-                            fila_cubierta[i] = True
-                            columna_cubierta[columna_con_estrella] = False
-                        else:
-                            return aumentar_camino(marcado, i, j)
+                    if m[i][j] == 0 and not filas_marcadas[i] and not columnas_marcadas[j]:
+                        marcas[i][j] = 2  # primo
+                        hay_estrella = False
+                        for k in range(n):
+                            if marcas[i][k] == 1:
+                                filas_marcadas[i] = True
+                                columnas_marcadas[k] = False
+                                hay_estrella = True
+                                break
+                        if not hay_estrella:
+                            return cambiar_marcas(marcas, i, j)
                         cero_encontrado = True
                         break
                 if cero_encontrado:
@@ -71,70 +84,84 @@ def algoritmo_hungaro(matriz_costos):
             else:
                 return None
 
-    def aumentar_camino(marcado, fila, columna):
-        camino = [(fila, columna)]
+    # Cambiar camino alternante
+    def cambiar_marcas(marcas, fila, col):
+        camino = [(fila, col)]
+
         while True:
-            f = next((i for i in range(n) if marcado[i][columna] == 1), None)
+            f = None
+            for i in range(n):
+                if marcas[i][col] == 1:
+                    f = i
+                    break
             if f is None:
                 break
-            camino.append((f, columna))
-            c = next((j for j in range(n) if marcado[f][j] == 2), None)
+            camino.append((f, col))
+
+            c = None
+            for j in range(n):
+                if marcas[f][j] == 2:
+                    c = j
+                    break
             if c is None:
                 break
             camino.append((f, c))
-            fila, columna = f, c
+            fila, col = f, c
 
         for f, c in camino:
-            if marcado[f][c] == 1:
-                marcado[f][c] = 0
-            elif marcado[f][c] == 2:
-                marcado[f][c] = 1
+            if marcas[f][c] == 1:
+                marcas[f][c] = 0
+            elif marcas[f][c] == 2:
+                marcas[f][c] = 1
 
         for i in range(n):
             for j in range(n):
-                if marcado[i][j] == 2:
-                    marcado[i][j] = 0
+                if marcas[i][j] == 2:
+                    marcas[i][j] = 0
 
         return True
 
-    def ajustar_matriz(matriz, fila_cubierta, columna_cubierta):
-        minimo_no_cubierto = min(
-            matriz[i][j]
-            for i in range(n)
-            for j in range(n)
-            if not fila_cubierta[i] and not columna_cubierta[j]
-        )
+    # Si no hay suficientes ceros, ajustar la matriz
+    def cambiar_matriz(m, filas_marcadas, columnas_marcadas):
+        min_valor = None
+        for i in range(n):
+            for j in range(n):
+                if not filas_marcadas[i] and not columnas_marcadas[j]:
+                    if min_valor is None or m[i][j] < min_valor:
+                        min_valor = m[i][j]
 
         for i in range(n):
             for j in range(n):
-                if fila_cubierta[i]:
-                    matriz[i][j] += minimo_no_cubierto
-                if not columna_cubierta[j]:
-                    matriz[i][j] -= minimo_no_cubierto
+                if filas_marcadas[i]:
+                    m[i][j] += min_valor
+                if not columnas_marcadas[j]:
+                    m[i][j] -= min_valor
 
     while True:
-        marcado, fila_cubierta, columna_cubierta = cubrir_ceros(matriz)
+        marcas, filas_marcadas, columnas_marcadas = marcar_ceros(matriz)
 
-        while sum(columna_cubierta) < n:
-            resultado = paso4(matriz, marcado, fila_cubierta, columna_cubierta)
+        while sum(columnas_marcadas) < n:
+            resultado = paso_cuatro(matriz, marcas, filas_marcadas, columnas_marcadas)
             if not resultado:
-                ajustar_matriz(matriz, fila_cubierta, columna_cubierta)
+                cambiar_matriz(matriz, filas_marcadas, columnas_marcadas)
             else:
                 break
 
-        estrellas = [(i, j) for i in range(n) for j in range(n) if marcado[i][j] == 1]
+        # Ver si ya se hizo la asignación completa
+        estrellas = []
+        for i in range(n):
+            for j in range(n):
+                if marcas[i][j] == 1:
+                    estrellas.append((i, j))
+
         if len(estrellas) == n:
             asignacion = [0] * n
             for i, j in estrellas:
                 asignacion[i] = j
 
-            # Limitar asignación a los trabajadores reales
-            asignacion = asignacion[:trabajadores]
+            asignacion = asignacion[:filas]
+            costo = 0
+            for i in range(filas):
+                costo += matriz_costos[i][asignacion[i]]
 
-            # Calcular costo total real (solo para los trabajadores reales)
-            costo_total = sum(
-                matriz_costos[i][asignacion[i]]
-                for i in range(trabajadores)
-            )
-
-            return asignacion, costo_total
+            return asignacion, costo
